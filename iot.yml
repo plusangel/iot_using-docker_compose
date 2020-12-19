@@ -1,0 +1,37 @@
+version: "3.5"
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    hostname: mosquitto
+    container_name: mosquitto
+    restart: always
+    ports: 
+      - "1883:1883"
+  influxdb:
+    image: influxdb:latest
+    hostname: influxdb
+    container_name: influxdb
+    restart: always
+    depends_on: 
+      - mosquitto  
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-storage:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB=sensors
+      - INFLUXDB_USER=telegraf-username
+      - INFLUXDB_PASSWORD=telegraf-password
+  telegraf:
+    image: telegraf:latest
+    hostname: telegraf
+    container_name: telegraf
+    restart: always
+    depends_on:
+      - influxdb
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+volumes:
+  influxdb-storage: {}
